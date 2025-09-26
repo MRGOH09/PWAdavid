@@ -6,7 +6,7 @@ import { SmoothTransition, PageSkeleton } from '../components/SmoothTransition'
 import WebAppWrapper from '../components/WebAppWrapper'
 import BrandHeader, { PageHeader } from '../components/BrandHeader'
 import PWAClient, { formatCurrency, formatDate, getCategoryInfo } from '../lib/api'
-import { formatDisplayDate } from '../../lib/date-utils'
+import { formatDisplayDate } from '../lib/date-utils'
 import QuickActions from '../components/QuickActions'
 
 // 🚀 原生PWA-Google API调用器 - 带认证的原生数据库操作
