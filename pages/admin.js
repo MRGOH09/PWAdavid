@@ -1363,24 +1363,18 @@ function AdminLoginForm({ setIsLoggedIn }) {
     setError('')
     setIsLoading(true)
 
-    // 硬编码的管理员凭证
-    const ADMIN_CREDENTIALS = {
-      username: 'AUSTIN',
-      password: 'Abcd1234'
-    }
-
     try {
-      // 验证用户名和密码
-      if (credentials.username === ADMIN_CREDENTIALS.username && 
-          credentials.password === ADMIN_CREDENTIALS.password) {
-        
-        // 登录成功，保存token到localStorage
-        localStorage.setItem('admin_token', 'admin_logged_in')
-        setIsLoggedIn(true)
-        
-      } else {
+      const r = await fetch('/api/admin/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', username: credentials.username, password: credentials.password })
+      })
+      if (!r.ok) {
         setError('用户名或密码错误')
+        setIsLoading(false)
+        return
       }
+      setIsLoggedIn(true)
     } catch (error) {
       setError('登录失败，请重试')
     } finally {
