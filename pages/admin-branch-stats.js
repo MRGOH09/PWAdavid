@@ -6,6 +6,7 @@ export default function AdminBranchStats() {
   const [isLoading, setIsLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [logs, setLogs] = useState([])
 
@@ -20,7 +21,7 @@ export default function AdminBranchStats() {
       const r = await fetch('/api/admin/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', password })
+        body: JSON.stringify({ action: 'login', username, password })
       })
       if (!r.ok) {
         addLog('❌ 登录失败', 'error')
@@ -91,6 +92,13 @@ export default function AdminBranchStats() {
             <p className="text-gray-300 mb-6">服务器校验，不会在网页中保存口令</p>
             
             <div className="space-y-4">
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="管理员用户名"
+                className="w-full p-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
               <input
                 type="password"
                 value={password}

@@ -14,10 +14,11 @@ export default async function handler(req, res) {
 
   try {
     if (action === 'login') {
-      const { password } = req.body || {}
-      const expected = process.env.ADMIN_PORTAL_PASSWORD
-      if (!expected) return res.status(500).json({ error: 'Admin password not configured' })
-      if (!password || password !== expected) return res.status(401).json({ error: 'Invalid password' })
+      const { username, password } = req.body || {}
+      const expectedUser = process.env.ADMIN_USERNAME || 'DAVID'
+      const expectedPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_PORTAL_PASSWORD || 'Abcd1234'
+      if (!username || !password) return res.status(400).json({ error: 'username and password required' })
+      if (username !== expectedUser || password !== expectedPass) return res.status(401).json({ error: 'Invalid credentials' })
       setAdminCookie(res)
       return res.status(200).json({ ok: true })
     }
@@ -30,4 +31,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: e.message || 'Admin session error' })
   }
 }
-
