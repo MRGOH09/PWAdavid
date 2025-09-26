@@ -1,9 +1,13 @@
 // Admin Users API - 安全的用户数据查看
 import { createClient } from '@supabase/supabase-js'
+import { BRANCHES } from '../../../lib/branches.js'
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY 
+    || process.env.SUPABASE_SERVICE_ROLE_KEY 
+    || process.env.SUPABASE_ANON_KEY 
+    || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
 export default async function handler(req, res) {
@@ -130,47 +134,33 @@ async function getBranches(req, res) {
 
     // 统计每个分行的用户数
     const branchStats = new Map()
-
-    // 统计每个分行的用户数
     allUsers?.forEach(user => {
       const branch = user.branch_code || '未分配'
       branchStats.set(branch, (branchStats.get(branch) || 0) + 1)
     })
 
-    // 构建分行列表
+    // 构建分行列表：先给“全部分行”，再给固定清单中的所有分行（即使当前没有用户）
     const branchList = [
-      {
-        code: 'all',
-        name: '全部分行',
-        userCount: allUsers?.length || 0
-      }
+      { code: 'all', name: '全部分行', userCount: allUsers?.length || 0 }
     ]
 
-    // 添加具体分行
-    const uniqueBranches = [...new Set(allUsers?.map(u => u.branch_code).filter(Boolean))]
-    uniqueBranches.sort().forEach(branchCode => {
+    BRANCHES.forEach((code) => {
       branchList.push({
-        code: branchCode,
-        name: branchCode,
-        userCount: branchStats.get(branchCode) || 0
+        code,
+        name: code,
+        userCount: branchStats.get(code) || 0
       })
     })
 
-    // 添加未分配分行
+    // 添加未分配
     const unassignedCount = branchStats.get('未分配') || (allUsers?.filter(u => !u.branch_code).length || 0)
     if (unassignedCount > 0) {
-      branchList.push({
-        code: 'null',
-        name: '未分配',
-        userCount: unassignedCount
-      })
+      branchList.push({ code: 'null', name: '未分配', userCount: unassignedCount })
     }
 
     console.log(`[Admin Users] 找到 ${branchList.length} 个分行`)
 
-    res.status(200).json({
-      branches: branchList
-    })
+    res.status(200).json({ branches: branchList })
 
   } catch (error) {
     console.error('[Admin Users] 获取分行列表失败:', error)
