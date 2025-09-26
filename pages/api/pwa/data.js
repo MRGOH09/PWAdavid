@@ -314,8 +314,8 @@ async function getDashboardData(userId, res) {
       .eq('user_id', userId)
       .single()
     
-    // 确保当月的自动记录存在
-    if (profile) {
+    // 确保当月的自动记录存在（默认关闭，避免多入口并发导致重复）
+    if (profile && process.env.CREATE_AUTO_ON_DASHBOARD === 'true') {
       await createMonthlyAutoRecords(userId, profile)
     }
       
