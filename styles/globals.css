@@ -1,0 +1,455 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 成功对话框动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes checkmark {
+  0% { 
+    stroke-dasharray: 0 100;
+  }
+  100% { 
+    stroke-dasharray: 100 100;
+  }
+}
+
+@keyframes progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out;
+}
+
+.animate-checkmark {
+  stroke-dasharray: 100;
+  animation: checkmark 0.6s ease-out;
+}
+
+.animate-progress {
+  animation: progress linear forwards;
+}
+
+/* 基础样式重置和优化 */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    @apply text-gray-900 bg-gray-50;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+  
+  /* 防止iOS Safari的橡皮筋效果 */
+  body {
+    position: fixed;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+  }
+  
+  #__next {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* 组件样式 */
+@layer components {
+  /* 安全区域适配 */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* 卡片阴影优化 */
+  .card-shadow {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+  
+  .card-shadow-hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  /* 按钮点击效果 */
+  .btn-active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* 滚动条样式 */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f3f4f6;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 2px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 2px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+}
+
+/* 工具样式 */
+@layer utilities {
+  /* 文本截断 */
+  .text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* 渐变背景 */
+  .gradient-primary {
+    background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+  }
+  
+  .gradient-success {
+    background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  }
+  
+  .gradient-danger {
+    background: linear-gradient(135deg, #f5222d 0%, #ff4d4f 100%);
+  }
+  
+  /* 动画优化 */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-bounce-in {
+    animation: bounceIn 0.5s ease-out;
+  }
+}
+
+/* 动画关键帧 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* PWA专用样式 */
+@media (display-mode: standalone) {
+  /* PWA模式下的特殊样式 */
+  .pwa-only {
+    display: block;
+  }
+  
+  /* 隐藏浏览器相关的UI */
+  .browser-only {
+    display: none;
+  }
+}
+
+/* WebApp统一样式 - 确保所有页面一致的webapp体验 */
+.webapp-mode {
+  /* 基础webapp样式 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.webapp-mode body {
+  /* 防止页面被拖拽 */
+  overscroll-behavior: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.webapp-mode #__next {
+  /* Next.js根容器 */
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* iOS Safari专用样式 - 强化全屏模式 */
+.ios-safari {
+  /* Safari UI完全隐藏 */
+  --safe-area-inset-top: env(safe-area-inset-top);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom);
+}
+
+.ios-safari body {
+  /* 强制全屏体验 */
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100vh !important;
+  height: -webkit-fill-available !important;
+  position: fixed !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+.ios-safari #__next {
+  /* Next.js容器全屏处理 */
+  height: 100vh !important;
+  height: -webkit-fill-available !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.ios-safari .webapp-container {
+  /* 适配安全区域 */
+  padding-top: var(--safe-area-inset-top, 0);
+  padding-bottom: var(--safe-area-inset-bottom, 0);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* Android设备专用样式 - 响应式优化 */
+.android-device {
+  /* 使用CSS变量适配不同屏幕 */
+  --vh: 1vh;
+  font-size: calc(14px + 0.5vw);
+}
+
+.android-device body {
+  /* Android设备字体和布局优化 */
+  min-height: calc(var(--vh, 1vh) * 100);
+  font-size: inherit;
+  line-height: 1.6;
+}
+
+.android-device .webapp-container {
+  /* Android容器适配 */
+  min-height: calc(var(--vh, 1vh) * 100);
+  font-size: inherit;
+}
+
+/* Android响应式文字大小 */
+.android-device h1 {
+  font-size: calc(1.5rem + 1vw);
+}
+
+.android-device h2 {
+  font-size: calc(1.3rem + 0.8vw);
+}
+
+.android-device h3 {
+  font-size: calc(1.1rem + 0.6vw);
+}
+
+.android-device .text-sm {
+  font-size: calc(0.8rem + 0.2vw);
+}
+
+.android-device .text-xs {
+  font-size: calc(0.7rem + 0.1vw);
+}
+
+/* Android按钮和卡片缩放优化 */
+.android-device .rounded-xl,
+.android-device .rounded-2xl {
+  border-radius: calc(0.75rem + 0.2vw);
+}
+
+.android-device .p-4 {
+  padding: calc(1rem + 0.3vw);
+}
+
+.android-device .p-6 {
+  padding: calc(1.5rem + 0.4vw);
+}
+
+/* Android设备密度适配 */
+@media screen and (max-width: 480px) and (-webkit-device-pixel-ratio: 3) {
+  .android-device {
+    font-size: 16px;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .android-device {
+    font-size: 15px;
+  }
+  
+  .android-device .p-4 {
+    padding: 0.8rem;
+  }
+  
+  .android-device .p-6 {
+    padding: 1.2rem;
+  }
+}
+
+/* PWA Standalone模式 */
+.pwa-standalone {
+  /* 完全隐藏浏览器UI */
+}
+
+.pwa-standalone .browser-ui {
+  display: none !important;
+}
+
+/* 浏览器模式 */
+.pwa-browser {
+  /* 浏览器中的webapp样式 */
+}
+
+.pwa-browser .webapp-header {
+  /* 确保header在浏览器中正确显示 */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* WebApp加载状态 */
+.webapp-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+/* 统一的WebApp容器 */
+.webapp-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  /* 暂时保持浅色主题，后续可扩展 */
+}
+
+/* 移动端优化 */
+@media (max-width: 640px) {
+  /* 移动端特定样式 */
+  .mobile-optimized {
+    font-size: 16px; /* 防止iOS放大表单 */
+  }
+  
+  /* 触摸友好的最小点击区域 */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* 高DPI屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .crisp-edges {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* 减少动画的用户偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .card {
+    border: 1px solid #ccc;
+    page-break-inside: avoid;
+  }
+}

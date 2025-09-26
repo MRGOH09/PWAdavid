@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA图标占位符</title>
+</head>
+<body>
+    <h2>📱 PWA应用图标设置说明</h2>
+    
+    <p><strong>当前状态：</strong> manifest.json已配置，但缺少实际图标文件</p>
+    
+    <h3>🔧 解决方案：</h3>
+    
+    <h4>方案1：使用在线工具生成（推荐）</h4>
+    <ol>
+        <li>访问 <a href="https://realfavicongenerator.net/" target="_blank">RealFaviconGenerator</a></li>
+        <li>上传一个512x512的PNG图片（财务/钱包主题）</li>
+        <li>自动生成所有PWA所需的图标尺寸</li>
+        <li>下载文件包，解压到 <code>/public/icons/</code> 文件夹</li>
+    </ol>
+    
+    <h4>方案2：手动创建</h4>
+    <ol>
+        <li>设计一个512x512的主图标</li>
+        <li>使用图像编辑软件生成以下尺寸：</li>
+        <ul>
+            <li>icon-72.png (72x72)</li>
+            <li>icon-96.png (96x96)</li>
+            <li>icon-128.png (128x128)</li>
+            <li>icon-144.png (144x144)</li>
+            <li>icon-152.png (152x152)</li>
+            <li>icon-192.png (192x192) - <strong>最重要</strong></li>
+            <li>icon-384.png (384x384)</li>
+            <li>icon-512.png (512x512)</li>
+        </ul>
+        <li>保存到 <code>/public/icons/</code> 文件夹</li>
+    </ol>
+    
+    <h4>方案3：使用SVG（临时）</h4>
+    <p>现代浏览器支持SVG图标，已创建 <code>favicon.svg</code></p>
+    
+    <h3>🎨 设计建议：</h3>
+    <ul>
+        <li>主题：财务管理、钱包、图表</li>
+        <li>颜色：#1677ff（主蓝色）+ 白色</li>
+        <li>风格：简洁、现代、易识别</li>
+        <li>元素：钱币、图表、钱包图标</li>
+    </ul>
+    
+    <h3>✅ 验证步骤：</h3>
+    <ol>
+        <li>添加图标文件到 /public/icons/ 文件夹</li>
+        <li>在手机浏览器中访问网站</li>
+        <li>点击"添加到主屏幕"</li>
+        <li>检查桌面图标是否正确显示</li>
+    </ol>
+    
+    <div style="background: #f0f0f0; padding: 15px; margin: 20px 0; border-radius: 8px;">
+        <strong>💡 快速测试：</strong><br>
+        创建一个简单的192x192像素PNG图片，命名为icon-192.png，放在/public/icons/文件夹中，就能看到基本效果。
+    </div>
+</body>
+</html>

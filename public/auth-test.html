@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>认证状态测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .button {
+            background: #1677ff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px 4px;
+            font-size: 14px;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .success { background: #f6ffed; border: 1px solid #b7eb8f; color: #389e0d; }
+        .error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
+        .info { background: #f0f9ff; border: 1px solid #91d5ff; color: #0958d9; }
+        .log {
+            background: #f5f5f5;
+            border: 1px solid #d9d9d9;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 认证状态测试</h1>
+    
+    <button id="checkAuth" class="button">检查认证状态</button>
+    <button id="checkDB" class="button">检查数据库</button>
+    
+    <div id="status" class="status info">点击按钮开始测试...</div>
+    
+    <h3>📝 测试结果</h3>
+    <div id="log" class="log">等待测试...\n</div>
+
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log')
+            const timestamp = new Date().toLocaleTimeString()
+            logDiv.textContent += `[${timestamp}] ${message}\n`
+            logDiv.scrollTop = logDiv.scrollHeight
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status')
+            statusDiv.textContent = message
+            statusDiv.className = `status ${type}`
+        }
+
+        async function checkAuth() {
+            log('检查认证状态...')
+            try {
+                const response = await fetch('/api/pwa/data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        action: 'check-auth'
+                    })
+                })
+
+                const result = await response.json()
+                
+                if (response.ok && result.authenticated) {
+                    log(`✅ 认证成功! 用户: ${result.user.name}, ID: ${result.user.id}`)
+                    updateStatus('✅ 用户已登录', 'success')
+                } else {
+                    log(`❌ 认证失败: ${result.message || result.error}`)
+                    updateStatus('❌ 用户未登录', 'error')
+                }
+            } catch (error) {
+                log(`❌ 认证检查失败: ${error.message}`)
+                updateStatus('❌ 认证检查失败', 'error')
+            }
+        }
+
+        async function checkDB() {
+            log('检查数据库状态...')
+            try {
+                const response = await fetch('/api/debug-push')
+                const result = await response.json()
+                
+                log('环境变量检查:')
+                Object.entries(result.environment).forEach(([key, value]) => {
+                    log(`  ${key}: ${value ? '✅' : '❌'}`)
+                })
+                
+                log('数据库表检查:')
+                Object.entries(result.database.tables).forEach(([table, exists]) => {
+                    log(`  ${table}: ${exists ? '✅' : '❌'}`)
+                })
+
+                if (result.database.errors) {
+                    log('错误信息:')
+                    Object.entries(result.database.errors).forEach(([table, error]) => {
+                        if (error) log(`  ${table}: ${error}`)
+                    })
+                }
+
+                updateStatus('数据库检查完成', 'info')
+            } catch (error) {
+                log(`❌ 数据库检查失败: ${error.message}`)
+                updateStatus('❌ 数据库检查失败', 'error')
+            }
+        }
+
+        document.getElementById('checkAuth').onclick = checkAuth
+        document.getElementById('checkDB').onclick = checkDB
+    </script>
+</body>
+</html>

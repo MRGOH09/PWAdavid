@@ -1,0 +1,25 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆形 -->
+  <circle cx="256" cy="256" r="256" fill="#1677ff"/>
+  
+  <!-- 钱包形状 -->
+  <rect x="96" y="176" width="320" height="224" rx="24" fill="#ffffff"/>
+  <rect x="96" y="176" width="320" height="64" rx="24" fill="#ffffff"/>
+  <rect x="96" y="176" width="320" height="32" rx="24" fill="#e6f4ff"/>
+  
+  <!-- 钱包细节 -->
+  <rect x="128" y="208" width="64" height="8" rx="4" fill="#1677ff" opacity="0.3"/>
+  <rect x="128" y="228" width="96" height="8" rx="4" fill="#1677ff" opacity="0.3"/>
+  
+  <!-- 金币图标 -->
+  <circle cx="344" cy="288" r="32" fill="#ffd700"/>
+  <text x="344" y="298" text-anchor="middle" fill="#1677ff" font-family="Arial" font-size="28" font-weight="bold">¥</text>
+  
+  <!-- 图表线条 -->
+  <path d="M128 320 L160 300 L192 280 L224 260 L256 270 L288 250" stroke="#52c41a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  
+  <!-- 装饰点 -->
+  <circle cx="160" cy="300" r="4" fill="#52c41a"/>
+  <circle cx="224" cy="260" r="4" fill="#52c41a"/>
+  <circle cx="288" cy="250" r="4" fill="#52c41a"/>
+</svg>

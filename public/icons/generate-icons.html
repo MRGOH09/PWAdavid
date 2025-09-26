@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA Icon Generator</title>
+    <style>
+        .icon-canvas { border: 1px solid #ccc; margin: 10px; }
+        .icon-preview { display: inline-block; margin: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>PWA应用图标生成器</h1>
+    
+    <div id="preview"></div>
+    
+    <script>
+    // 图标尺寸配置
+    const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
+    
+    iconSizes.forEach(size => {
+        // 创建canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        
+        // 绘制背景
+        ctx.fillStyle = '#1677ff';
+        ctx.fillRect(0, 0, size, size);
+        
+        // 绘制圆角
+        ctx.beginPath();
+        const radius = size * 0.1;
+        ctx.roundRect(0, 0, size, size, radius);
+        ctx.clip();
+        
+        // 重新绘制背景
+        ctx.fillStyle = '#1677ff';
+        ctx.fillRect(0, 0, size, size);
+        
+        // 绘制emoji
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `${size * 0.5}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('💰', size/2, size/2);
+        
+        // 创建下载链接
+        const link = document.createElement('a');
+        link.download = `icon-${size}.png`;
+        link.href = canvas.toDataURL();
+        
+        const preview = document.createElement('div');
+        preview.className = 'icon-preview';
+        preview.innerHTML = `
+            <div>${size}x${size}</div>
+            <canvas class="icon-canvas" width="${Math.min(size, 128)}" height="${Math.min(size, 128)}"></canvas>
+            <br>
+            <button onclick="this.parentNode.querySelector('a').click()">下载</button>
+        `;
+        
+        // 绘制预览
+        const previewCanvas = preview.querySelector('canvas');
+        const previewCtx = previewCanvas.getContext('2d');
+        const previewSize = Math.min(size, 128);
+        previewCtx.drawImage(canvas, 0, 0, size, size, 0, 0, previewSize, previewSize);
+        
+        preview.appendChild(link);
+        document.getElementById('preview').appendChild(preview);
+    });
+    
+    // 生成favicon
+    const faviconCanvas = document.createElement('canvas');
+    faviconCanvas.width = 32;
+    faviconCanvas.height = 32;
+    const faviconCtx = faviconCanvas.getContext('2d');
+    
+    faviconCtx.fillStyle = '#1677ff';
+    faviconCtx.fillRect(0, 0, 32, 32);
+    faviconCtx.fillStyle = '#ffffff';
+    faviconCtx.font = '20px Arial';
+    faviconCtx.textAlign = 'center';
+    faviconCtx.textBaseline = 'middle';
+    faviconCtx.fillText('💰', 16, 16);
+    
+    const faviconLink = document.createElement('a');
+    faviconLink.download = 'favicon.ico';
+    faviconLink.href = faviconCanvas.toDataURL();
+    
+    const faviconDiv = document.createElement('div');
+    faviconDiv.innerHTML = `
+        <h3>Favicon (32x32)</h3>
+        <canvas width="32" height="32"></canvas>
+        <br>
+        <button onclick="this.querySelector('a').click()">下载 favicon.ico</button>
+    `;
+    faviconDiv.querySelector('canvas').getContext('2d').drawImage(faviconCanvas, 0, 0);
+    faviconDiv.appendChild(faviconLink);
+    document.getElementById('preview').appendChild(faviconDiv);
+    </script>
+</body>
+</html>

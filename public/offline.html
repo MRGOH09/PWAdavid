@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>离线模式 - Learner Club</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+      max-width: 400px;
+    }
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.8;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+    .retry-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .retry-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+    }
+    .features {
+      margin-top: 2rem;
+      text-align: left;
+    }
+    .features h3 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .features ul {
+      list-style: none;
+      padding: 0;
+    }
+    .features li {
+      padding: 0.5rem 0;
+      opacity: 0.8;
+    }
+    .features li:before {
+      content: "✓ ";
+      margin-right: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📱</div>
+    <h1>您正在离线使用</h1>
+    <p>网络连接暂时不可用，但您仍可以浏览已缓存的内容。</p>
+    
+    <button class="retry-btn" onclick="location.reload()">
+      🔄 重新连接
+    </button>
+    
+    <div class="features">
+      <h3>📦 离线功能</h3>
+      <ul>
+        <li>查看已缓存的财务数据</li>
+        <li>浏览历史记录</li>
+        <li>使用基本功能</li>
+        <li>自动同步新数据</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // 检测网络状态
+    function checkOnline() {
+      if (navigator.onLine) {
+        // 网络恢复，尝试重新加载
+        setTimeout(() => {
+          location.href = '/'
+        }, 1000)
+      }
+    }
+    
+    // 监听网络状态变化
+    window.addEventListener('online', checkOnline)
+    
+    // 定期检查网络
+    setInterval(() => {
+      fetch('/', { method: 'HEAD', cache: 'no-cache' })
+        .then(() => checkOnline())
+        .catch(() => {})
+    }, 5000)
+    
+    console.log('📱 Learner Club PWA - 离线模式')
+  </script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推送通知测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .button {
+            background: #1677ff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px 4px;
+            font-size: 14px;
+        }
+        .button:hover {
+            background: #0958d9;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .success { background: #f6ffed; border: 1px solid #b7eb8f; color: #389e0d; }
+        .error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
+        .info { background: #f0f9ff; border: 1px solid #91d5ff; color: #0958d9; }
+        .log {
+            background: #f5f5f5;
+            border: 1px solid #d9d9d9;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔔 推送通知测试</h1>
+    
+    <div id="status" class="status info">
+        📱 正在初始化推送服务...
+    </div>
+    
+    <div>
+        <button id="requestPermission" class="button" disabled>
+            🔐 请求推送权限
+        </button>
+        <button id="subscribe" class="button" disabled>
+            ✅ 订阅推送通知
+        </button>
+        <button id="unsubscribe" class="button" disabled>
+            ❌ 取消订阅
+        </button>
+        <button id="testPush" class="button" disabled>
+            🧪 发送测试推送
+        </button>
+    </div>
+    
+    <h3>📊 推送状态</h3>
+    <div id="pushStatus" class="info status">
+        等待检查推送支持...
+    </div>
+    
+    <h3>📝 操作日志</h3>
+    <div id="log" class="log">初始化中...\n</div>
+
+    <script>
+        // 日志函数
+        function log(message) {
+            const logDiv = document.getElementById('log')
+            const timestamp = new Date().toLocaleTimeString()
+            logDiv.textContent += `[${timestamp}] ${message}\n`
+            logDiv.scrollTop = logDiv.scrollHeight
+            console.log(message)
+        }
+
+        // 状态更新函数
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status')
+            statusDiv.textContent = message
+            statusDiv.className = `status ${type}`
+        }
+
+        // 推送状态更新
+        function updatePushStatus(message, type = 'info') {
+            const pushStatusDiv = document.getElementById('pushStatus')
+            pushStatusDiv.textContent = message
+            pushStatusDiv.className = `${type} status`
+        }
+
+        // 按钮控制
+        function setButtonState(buttonId, enabled) {
+            document.getElementById(buttonId).disabled = !enabled
+        }
+
+        // 初始化推送通知
+        async function initializePushNotifications() {
+            log('开始初始化推送通知系统...')
+
+            // 检查浏览器支持
+            if (!('serviceWorker' in navigator)) {
+                updateStatus('❌ 浏览器不支持Service Worker', 'error')
+                updatePushStatus('不支持推送通知', 'error')
+                return false
+            }
+
+            if (!('PushManager' in window)) {
+                updateStatus('❌ 浏览器不支持Push API', 'error')
+                updatePushStatus('不支持推送通知', 'error')
+                return false
+            }
+
+            log('✅ 浏览器支持推送通知')
+
+            try {
+                // 注册Service Worker
+                log('注册Service Worker...')
+                const registration = await navigator.serviceWorker.register('/sw.js')
+                log('✅ Service Worker注册成功')
+
+                // 检查当前推送状态
+                const permission = Notification.permission
+                log(`当前推送权限状态: ${permission}`)
+
+                updatePushStatus(`推送权限: ${permission}`, 
+                    permission === 'granted' ? 'success' : 
+                    permission === 'denied' ? 'error' : 'info')
+
+                // 更新按钮状态
+                setButtonState('requestPermission', permission === 'default')
+                
+                if (permission === 'granted') {
+                    const subscription = await registration.pushManager.getSubscription()
+                    if (subscription) {
+                        log('✅ 浏览器存在推送订阅')
+                        log(`订阅端点: ${subscription.endpoint.slice(-50)}...`)
+                        
+                        // 验证服务器是否也有这个订阅
+                        try {
+                            const verifyResponse = await fetch('/api/pwa/data', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ action: 'verify-subscription' })
+                            })
+                            
+                            const verifyResult = await verifyResponse.json()
+                            if (verifyResult.hasSubscription) {
+                                log('✅ 服务器也存在对应订阅')
+                                setButtonState('unsubscribe', true)
+                                setButtonState('testPush', true)
+                                updateStatus('✅ 推送通知已完全启用', 'success')
+                            } else {
+                                log('⚠️  服务器没有对应订阅，需要重新同步')
+                                setButtonState('subscribe', true)
+                                updateStatus('⚠️  需要重新同步订阅', 'info')
+                            }
+                        } catch (error) {
+                            log('⚠️  无法验证服务器订阅状态，假设需要重新订阅')
+                            setButtonState('subscribe', true)
+                            updateStatus('⚠️  需要重新订阅推送服务', 'info')
+                        }
+                    } else {
+                        log('📝 需要订阅推送服务')
+                        setButtonState('subscribe', true)
+                        updateStatus('📝 需要订阅推送服务', 'info')
+                    }
+                } else if (permission === 'denied') {
+                    updateStatus('❌ 推送权限被拒绝，请在浏览器设置中允许', 'error')
+                } else {
+                    updateStatus('🔐 需要请求推送权限', 'info')
+                }
+
+                return true
+
+            } catch (error) {
+                log(`❌ 初始化失败: ${error.message}`)
+                updateStatus('❌ 初始化推送服务失败', 'error')
+                return false
+            }
+        }
+
+        // 请求推送权限
+        async function requestPermission() {
+            log('请求推送权限...')
+            try {
+                const permission = await Notification.requestPermission()
+                log(`权限请求结果: ${permission}`)
+                
+                if (permission === 'granted') {
+                    updateStatus('✅ 推送权限已获得', 'success')
+                    setButtonState('requestPermission', false)
+                    setButtonState('subscribe', true)
+                    updatePushStatus('推送权限: granted', 'success')
+                } else {
+                    updateStatus('❌ 推送权限被拒绝', 'error')
+                    updatePushStatus('推送权限: denied', 'error')
+                }
+            } catch (error) {
+                log(`❌ 权限请求失败: ${error.message}`)
+                updateStatus('❌ 权限请求失败', 'error')
+            }
+        }
+
+        // 订阅推送通知
+        async function subscribePush() {
+            log('开始订阅推送通知...')
+            try {
+                const registration = await navigator.serviceWorker.ready
+                
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: 'BHn7QgZMASGfPzs_t1h604Z5ku_HlpZufjZZgDO1qiPopryzLII_GaInmuHqiNMhypVkz99dy2ES8tknl8n-ncE'
+                })
+
+                log('✅ 浏览器订阅成功')
+                log(`订阅端点: ${subscription.endpoint}`)
+
+                // 发送订阅信息到服务器
+                const response = await fetch('/api/pwa/data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        action: 'subscribe-push',
+                        subscription: subscription,
+                        service: 'fcm',
+                        deviceInfo: {
+                            userAgent: navigator.userAgent,
+                            browser: navigator.userAgentData?.brand || 'unknown'
+                        }
+                    })
+                })
+
+                const result = await response.json()
+                
+                if (result.success) {
+                    log('✅ 服务器订阅保存成功')
+                    updateStatus('✅ 推送订阅成功！', 'success')
+                    setButtonState('subscribe', false)
+                    setButtonState('unsubscribe', true)
+                    setButtonState('testPush', true)
+                    updatePushStatus('已订阅推送通知', 'success')
+                } else {
+                    throw new Error(result.error || '服务器保存订阅失败')
+                }
+
+            } catch (error) {
+                log(`❌ 订阅失败: ${error.message}`)
+                updateStatus('❌ 推送订阅失败', 'error')
+            }
+        }
+
+        // 取消订阅
+        async function unsubscribePush() {
+            log('开始取消推送订阅...')
+            try {
+                const registration = await navigator.serviceWorker.ready
+                const subscription = await registration.pushManager.getSubscription()
+
+                if (subscription) {
+                    await subscription.unsubscribe()
+                    log('✅ 浏览器取消订阅成功')
+                }
+
+                // 通知服务器取消订阅
+                const response = await fetch('/api/pwa/data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        action: 'unsubscribe-push'
+                    })
+                })
+
+                const result = await response.json()
+                
+                if (result.success) {
+                    log('✅ 服务器取消订阅成功')
+                    updateStatus('✅ 已取消推送订阅', 'success')
+                    setButtonState('subscribe', true)
+                    setButtonState('unsubscribe', false)
+                    setButtonState('testPush', false)
+                    updatePushStatus('未订阅推送通知', 'info')
+                } else {
+                    throw new Error(result.error || '服务器取消订阅失败')
+                }
+
+            } catch (error) {
+                log(`❌ 取消订阅失败: ${error.message}`)
+                updateStatus('❌ 取消订阅失败', 'error')
+            }
+        }
+
+        // 发送测试推送
+        async function sendTestPush() {
+            log('发送测试推送通知...')
+            try {
+                const response = await fetch('/api/pwa/data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        action: 'test-push-notification'
+                    })
+                })
+
+                const result = await response.json()
+                
+                if (result.success) {
+                    log('✅ 测试推送发送成功')
+                    updateStatus('✅ 测试推送已发送！请查看通知', 'success')
+                } else {
+                    throw new Error(result.message || '测试推送发送失败')
+                }
+
+            } catch (error) {
+                log(`❌ 发送测试推送失败: ${error.message}`)
+                updateStatus('❌ 发送测试推送失败', 'error')
+            }
+        }
+
+        // 事件监听
+        document.getElementById('requestPermission').onclick = requestPermission
+        document.getElementById('subscribe').onclick = subscribePush
+        document.getElementById('unsubscribe').onclick = unsubscribePush
+        document.getElementById('testPush').onclick = sendTestPush
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', initializePushNotifications)
+    </script>
+</body>
+</html>
