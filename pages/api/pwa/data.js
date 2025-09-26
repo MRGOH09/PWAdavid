@@ -23,8 +23,14 @@ const BRANCH_NAMES = {
 
 // KISS: 使用Vercel-Supabase集成环境变量
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
+  // Prefer service key; fall back to any available anon key
+  process.env.SUPABASE_SERVICE_KEY 
+    || process.env.SUPABASE_SERVICE_ROLE_KEY 
+    || process.env.SUPABASE_SERVICE_ROLE 
+    || process.env.SUPABASE_SERVICE 
+    || process.env.SUPABASE_ANON_KEY 
+    || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
 // 创建或更新月度自动记录（幂等操作）
