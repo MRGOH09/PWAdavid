@@ -1935,7 +1935,9 @@ function BranchStatsPanel() {
       setLastUpdate(new Date().toLocaleTimeString('zh-CN'))
     } catch (error) {
       console.error('加载分院统计失败:', error)
-      alert('加载失败: ' + error.message)
+      if (error.message && error.message.includes('403')) {
+        alert('权限不足，请先在 管理页 登录')
+      }
     } finally {
       setLoading(false)
     }

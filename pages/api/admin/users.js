@@ -1,5 +1,6 @@
 // Admin Users API - 安全的用户数据查看
 import { createClient } from '@supabase/supabase-js'
+import { hasValidAdminSession } from '../../../lib/admin-auth'
 import { BRANCHES } from '../../../lib/branches.js'
 
 const supabase = createClient(
@@ -11,6 +12,9 @@ const supabase = createClient(
 )
 
 export default async function handler(req, res) {
+  if (!hasValidAdminSession(req)) {
+    return res.status(403).json({ error: 'Forbidden' })
+  }
   if (req.method === 'GET') {
     return await handleGet(req, res)
   } else if (req.method === 'POST') {
