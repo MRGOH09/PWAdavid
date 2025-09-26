@@ -259,10 +259,15 @@ function UserManagementPanel() {
   const [loading, setLoading] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
 
+  const adminHeaders = () => ({
+    'Content-Type': 'application/json',
+    'x-admin-password': (typeof window !== 'undefined' && localStorage.getItem('admin_password')) || ''
+  })
+
   // 加载分院列表
   const loadBranches = async () => {
     try {
-      const response = await fetch('/api/admin/users?action=branches')
+      const response = await fetch('/api/admin/users?action=branches', { headers: adminHeaders() })
       if (!response.ok) {
         throw new Error(`获取分院列表失败: ${response.status}`)
       }
@@ -285,7 +290,7 @@ function UserManagementPanel() {
         ? '/api/admin/users' 
         : `/api/admin/users?branch=${encodeURIComponent(branch)}`
         
-      const response = await fetch(url)
+      const response = await fetch(url, { headers: adminHeaders() })
       if (!response.ok) {
         throw new Error(`加载用户失败: ${response.status}`)
       }
@@ -1364,16 +1369,9 @@ function AdminLoginForm({ setIsLoggedIn }) {
     setIsLoading(true)
 
     try {
-      const r = await fetch('/api/admin/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', username: credentials.username, password: credentials.password })
-      })
-      if (!r.ok) {
-        setError('用户名或密码错误')
-        setIsLoading(false)
-        return
-      }
+      // 简化：不在前端校验口令，不显示在UI，仅保存到本地用于请求头
+      localStorage.setItem('admin_username', credentials.username || '')
+      localStorage.setItem('admin_password', credentials.password || '')
       setIsLoggedIn(true)
     } catch (error) {
       setError('登录失败，请重试')
@@ -1608,11 +1606,16 @@ function BranchManagementPanel() {
   const [editingUserId, setEditingUserId] = useState(null)
   const [newBranchForUser, setNewBranchForUser] = useState('')
 
+  const adminHeaders = () => ({
+    'Content-Type': 'application/json',
+    'x-admin-password': (typeof window !== 'undefined' && localStorage.getItem('admin_password')) || ''
+  })
+
   // 加载分院列表
   const loadBranches = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/admin/users?action=branches')
+      const response = await fetch('/api/admin/users?action=branches', { headers: adminHeaders() })
       if (!response.ok) throw new Error('获取分院列表失败')
       
       const data = await response.json()
@@ -1633,7 +1636,7 @@ function BranchManagementPanel() {
     setUsersLoading(true)
     try {
       const branchParam = branchCode === 'null' ? '' : branchCode
-      const response = await fetch(`/api/admin/users?action=list&branch=${branchParam}&limit=100`)
+      const response = await fetch(`/api/admin/users?action=list&branch=${branchParam}&limit=100`, { headers: adminHeaders() })
       
       if (!response.ok) throw new Error('获取分院用户失败')
       
@@ -1661,9 +1664,7 @@ function BranchManagementPanel() {
     try {
       const response = await fetch('/api/admin/users', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: adminHeaders(),
         body: JSON.stringify({
           action: 'change-branch',
           userId: userId,
