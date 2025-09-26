@@ -92,7 +92,7 @@ export default async function handler(req, res) {
   try {
     // CORS和缓存控制处理
     res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cache-Control, Pragma, Authorization')
     
     // 强制无缓存 - 特别针对Safari PWA
@@ -105,7 +105,10 @@ export default async function handler(req, res) {
       return res.status(200).end()
     }
     
-    if (req.method !== 'POST') {
+    // 允许 GET 作为兼容：通过 query.action 支持只读查询
+    const isPost = req.method === 'POST'
+    const isGet = req.method === 'GET'
+    if (!isPost && !isGet) {
       return res.status(405).json({ error: 'Method not allowed' })
     }
     
@@ -164,7 +167,7 @@ export default async function handler(req, res) {
     
     console.log(`[PWA Data] 用户信息: id=${dbUser.id}, name=${dbUser.name}, branch_code=${dbUser.branch_code}`)
     
-    const { action, ...params } = req.body
+    const { action, ...params } = isPost ? req.body : { action: req.query.action || 'dashboard', ...req.query }
     console.log(`[PWA Data] 收到body:`, req.body)
     console.log(`[PWA Data] 处理请求: action=${action}, user=${dbUser.id}`)
     
