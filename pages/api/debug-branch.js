@@ -7,12 +7,12 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
   try {
-    // 1. 直接查询数据库中所有用户的branch_code
+    // 1. 查询部分用户的分院信息（不限定代码）
     const { data: allUsers } = await supabase
       .from('users')
       .select('id, name, branch_code')
       .neq('status', 'test')
-      .in('branch_code', ['PU', '小天使'])
+      .limit(100)
     
     console.log('查询到的用户:', allUsers)
     
@@ -25,20 +25,12 @@ export default async function handler(req, res) {
       branch_code_json: JSON.stringify(user.branch_code)
     }))
     
-    // 3. 测试字符串比较
-    const testComparisons = allUsers?.map(user => {
-      const tests = {
-        name: user.name,
-        original: user.branch_code,
-        equals_PU: user.branch_code === 'PU',
-        equals_PU_trim: user.branch_code?.trim() === 'PU',
-        equals_angel: user.branch_code === '小天使',
-        equals_angel_trim: user.branch_code?.trim() === '小天使',
-        toString_equals_PU: String(user.branch_code) === 'PU',
-        toString_equals_angel: String(user.branch_code) === '小天使'
-      }
-      return tests
-    })
+    // 3. 字符串比较样例（不针对特定代码）
+    const testComparisons = allUsers?.map(user => ({
+      name: user.name,
+      original: user.branch_code,
+      equals_trimmed: user.branch_code === user.branch_code?.trim(),
+    }))
     
     // 4. 获取有积分的用户
     const { data: scores } = await supabase
@@ -51,7 +43,6 @@ export default async function handler(req, res) {
           branch_code
         )
       `)
-      .in('users.branch_code', ['PU', '小天使'])
       .gt('total_score', 0)
     
     // 5. 分析积分数据中的branch_code
@@ -64,23 +55,12 @@ export default async function handler(req, res) {
     }))
     
     return res.json({
-      users_count: {
-        PU: allUsers?.filter(u => u.branch_code === 'PU').length || 0,
-        小天使: allUsers?.filter(u => u.branch_code === '小天使').length || 0
-      },
+      users_count: Object.entries((allUsers||[]).reduce((acc,u)=>{acc[u.branch_code||'未分配']=(acc[u.branch_code||'未分配']||0)+1;return acc},{})).slice(0,10),
       branch_analysis: branchAnalysis,
       test_comparisons: testComparisons,
-      scores_count: {
-        PU: scores?.filter(s => s.users.branch_code === 'PU').length || 0,
-        小天使: scores?.filter(s => s.users.branch_code === '小天使').length || 0
-      },
+      scores_count: Object.entries((scores||[]).reduce((acc,s)=>{const b=s.users.branch_code||'未分配';acc[b]=(acc[b]||0)+1;return acc},{ })),
       score_analysis: scoreAnalysis,
-      debug_info: {
-        PU_string: JSON.stringify('PU'),
-        angel_string: JSON.stringify('小天使'),
-        PU_bytes: Buffer.from('PU').toString('hex'),
-        angel_bytes: Buffer.from('小天使').toString('hex')
-      }
+      debug_info: {}
     })
     
   } catch (error) {

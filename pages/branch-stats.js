@@ -7,17 +7,9 @@ export default function BranchStats() {
   const [isLoading, setIsLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState(null)
 
-  // 分院信息配置 - 包含新增的小天使分院
-  const branchConfig = {
-    'PU': { name: 'PU分院', color: '#3B82F6', icon: '🏛️' },
-    'MM': { name: 'MM分院', color: '#EF4444', icon: '🏢' },
-    'KL': { name: 'KL分院', color: '#10B981', icon: '🏙️' },
-    'JB': { name: 'JB分院', color: '#F59E0B', icon: '🌉' },
-    'PG': { name: 'PG分院', color: '#8B5CF6', icon: '🏝️' },
-    'KK': { name: 'KK分院', color: '#06B6D4', icon: '🏔️' },
-    'KC': { name: 'KC分院', color: '#84CC16', icon: '🌾' },
-    '小天使': { name: '小天使分院', color: '#EC4899', icon: '👼' }
-  }
+  const { BRANCHES } = require('../lib/branches.js')
+  const { branchConfigFor } = require('../lib/branches.js')
+  const branchConfig = Object.fromEntries(BRANCHES.map((b, i) => [b, branchConfigFor(b, i)]))
 
   const loadStats = async () => {
     setIsLoading(true)
@@ -142,11 +134,7 @@ export default function BranchStats() {
               {/* 分院统计网格 */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {stats.map((branch, index) => {
-                  const config = branchConfig[branch.branch_code] || { 
-                    name: branch.branch_code, 
-                    color: '#6B7280', 
-                    icon: '🏫' 
-                  }
+                  const config = branchConfig[branch.branch_code] || branchConfigFor(branch.branch_code, index)
                   const percentage = (branch.count / maxCount) * 100
 
                   return (
@@ -231,9 +219,7 @@ export default function BranchStats() {
                               </span>
                             </>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                              {branch.branch_code === '小天使' ? '👼 特别分院' : '🔍 其他分院'}
-                            </span>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">分院</span>
                           )}
                         </div>
                       </div>

@@ -5,11 +5,7 @@ import ModernCard from '../components/ModernCard'
 import WebAppWrapper from '../components/WebAppWrapper'
 
 // 分行选择数据
-const BRANCH_OPTIONS = [
-  'PJY', 'BLS', 'OTK', 'PU', 'UKT', 'TLK', 
-  'M2', 'BP', 'MTK', 'HQ', 'VIVA', 'STL', 
-  'SRD', 'PDMR', 'KK', '小天使'
-]
+const { BRANCHES: BRANCH_OPTIONS } = require('../lib/branches.js')
 
 export default function RegisterPage() {
   const router = useRouter()

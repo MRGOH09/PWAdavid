@@ -1918,11 +1918,9 @@ function BranchStatsPanel() {
   const [lastUpdate, setLastUpdate] = useState(null)
 
   // 分院信息配置
-  const branchConfig = {
-    'MAIN': { name: 'MAIN分院', color: '#3B82F6', icon: '🏛️' },
-    '小天使': { name: '小天使分院', color: '#EC4899', icon: '👼' },
-    '未分配': { name: '未分配', color: '#6B7280', icon: '❓' }
-  }
+  const { BRANCHES, branchConfigFor } = require('../lib/branches.js')
+  const branchConfig = Object.fromEntries(BRANCHES.map((b, i) => [b, branchConfigFor(b, i)]))
+  branchConfig['未分配'] = { name: '未分配', color: '#6B7280', icon: '❓' }
 
   // 加载分院统计数据
   const loadBranchStats = async () => {

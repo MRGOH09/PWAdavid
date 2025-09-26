@@ -36,11 +36,7 @@ export default function EnhancedRegistrationPage() {
   })
 
   // 分行选项
-  const BRANCH_OPTIONS = [
-    'PJY', 'BLS', 'OTK', 'PU', 'UKT', 'TLK', 
-    'M2', 'BP', 'MTK', 'HQ', 'VIVA', 'STL', 
-    'SRD', 'PDMR', 'KK', '小天使'
-  ]
+  const { BRANCHES: BRANCH_OPTIONS } = require('../lib/branches.js')
 
   // 检查认证状态
   useEffect(() => {
