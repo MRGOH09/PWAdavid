@@ -36,45 +36,53 @@ async function createMonthlyAutoRecords(userId, fieldName, value) {
   
   if (!recordConfig) return
   
-  // 检查是否已存在
-  const { data: existing } = await supabase
-    .from('records')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('ymd', ymd)
-    .eq('category_code', recordConfig.code)
-    .eq('is_voided', false)
-    .maybeSingle()
-  
+  // 幂等：先更新，不存在则插入；唯一索引冲突时再更新
   if (recordConfig.amount > 0) {
-    if (!existing) {
-      // 创建新记录
-      await supabase.from('records').insert([{
-        user_id: userId,
-        category_group: recordConfig.group,
-        category_code: recordConfig.code,
-        amount: recordConfig.amount,
-        note: 'Auto-generated monthly',
-        ymd: ymd
-      }])
-      
-      console.log(`[update-settings] 创建自动记录: ${recordConfig.code} = ${recordConfig.amount}`)
-    } else {
-      // 更新现有记录
-      await supabase
-        .from('records')
-        .update({ amount: recordConfig.amount })
-        .eq('id', existing.id)
-      
+    const { data: updated, error: updateErr } = await supabase
+      .from('records')
+      .update({ amount: recordConfig.amount, is_voided: false, note: 'Auto-generated monthly' })
+      .eq('user_id', userId)
+      .eq('ymd', ymd)
+      .eq('category_code', recordConfig.code)
+      .select('id')
+
+    if (!updateErr && updated && updated.length > 0) {
       console.log(`[update-settings] 更新自动记录: ${recordConfig.code} = ${recordConfig.amount}`)
+      return
     }
-  } else if (existing) {
-    // 如果金额为0且记录存在，删除记录
+
+    const { error: insertErr } = await supabase.from('records').insert([{
+      user_id: userId,
+      category_group: recordConfig.group,
+      category_code: recordConfig.code,
+      amount: recordConfig.amount,
+      note: 'Auto-generated monthly',
+      ymd
+    }])
+
+    if (insertErr) {
+      if (insertErr.code === '23505') {
+        await supabase
+          .from('records')
+          .update({ amount: recordConfig.amount, is_voided: false })
+          .eq('user_id', userId)
+          .eq('ymd', ymd)
+          .eq('category_code', recordConfig.code)
+        console.log(`[update-settings] 冲突后更新: ${recordConfig.code} = ${recordConfig.amount}`)
+      } else {
+        console.warn('[update-settings] 插入失败:', insertErr)
+      }
+    } else {
+      console.log(`[update-settings] 创建自动记录: ${recordConfig.code} = ${recordConfig.amount}`)
+    }
+  } else {
+    // 金额为0：将现有记录置为作废
     await supabase
       .from('records')
       .update({ is_voided: true })
-      .eq('id', existing.id)
-    
+      .eq('user_id', userId)
+      .eq('ymd', ymd)
+      .eq('category_code', recordConfig.code)
     console.log(`[update-settings] 删除自动记录: ${recordConfig.code}`)
   }
 }

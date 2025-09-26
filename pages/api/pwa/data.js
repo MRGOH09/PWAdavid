@@ -41,36 +41,49 @@ async function createMonthlyAutoRecords(userId, profile) {
   ].filter(r => r.amount > 0)
   
   for (const record of autoRecords) {
-    // 检查是否已存在（幂等性）
-    const { data: existing } = await supabase
-      .from('records')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('ymd', ymd)
-      .eq('category_code', record.code)
-      .eq('is_voided', false)
-      .maybeSingle()
-    
-    if (!existing) {
-      // 创建新记录
-      await supabase.from('records').insert([{
+    try {
+      // 先尝试更新（大多数情况下记录已存在）
+      const { data: updated, error: updateErr } = await supabase
+        .from('records')
+        .update({ amount: record.amount, is_voided: false, note: 'Auto-generated monthly' })
+        .eq('user_id', userId)
+        .eq('ymd', ymd)
+        .eq('category_code', record.code)
+        .select('id')
+
+      if (!updateErr && updated && updated.length > 0) {
+        console.log(`[createMonthlyAutoRecords] 更新自动记录: ${record.code} = ${record.amount}`)
+        continue
+      }
+
+      // 不存在则插入；若唯一索引冲突，转为更新
+      const { error: insertErr } = await supabase.from('records').insert([{
         user_id: userId,
         category_group: record.group,
         category_code: record.code,
         amount: record.amount,
         note: 'Auto-generated monthly',
-        ymd: ymd
+        ymd
       }])
-      
-      console.log(`[createMonthlyAutoRecords] 创建自动记录: ${record.code} = ${record.amount}`)
-    } else {
-      // 更新现有记录的金额（如果用户修改了年度设置）
-      await supabase
-        .from('records')
-        .update({ amount: record.amount })
-        .eq('id', existing.id)
-      
-      console.log(`[createMonthlyAutoRecords] 更新自动记录: ${record.code} = ${record.amount}`)
+
+      if (insertErr) {
+        // 23505 = unique_violation（由我们建议的唯一索引保护）
+        if (insertErr.code === '23505') {
+          await supabase
+            .from('records')
+            .update({ amount: record.amount, is_voided: false })
+            .eq('user_id', userId)
+            .eq('ymd', ymd)
+            .eq('category_code', record.code)
+          console.log(`[createMonthlyAutoRecords] 冲突后更新: ${record.code} = ${record.amount}`)
+        } else {
+          console.warn('[createMonthlyAutoRecords] 插入失败:', insertErr)
+        }
+      } else {
+        console.log(`[createMonthlyAutoRecords] 创建自动记录: ${record.code} = ${record.amount}`)
+      }
+    } catch (e) {
+      console.error('[createMonthlyAutoRecords] 异常:', e)
     }
   }
 }
