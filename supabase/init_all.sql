@@ -30,6 +30,8 @@ create table if not exists user_profile (
   a_pct numeric(5,2) default 0 check (a_pct >= 0 AND a_pct <= 100),
   b_pct numeric(5,2) default 0,
   travel_budget_annual numeric(12,2) default 0,
+  annual_medical_insurance numeric(12,2) default 0 check (annual_medical_insurance >= 0),
+  annual_car_insurance numeric(12,2) default 0 check (annual_car_insurance >= 0),
   prev_month_spend numeric(12,2) default 0,
   current_streak int default 0,
   max_streak int default 0,
@@ -185,4 +187,3 @@ create index if not exists idx_user_daily_scores_streak on user_daily_scores(cur
 --   'users','user_profile','records','daily_summary','user_month_budget','leaderboard_daily','branch_daily',
 --   'push_subscriptions','user_daily_scores','branch_scores_daily','score_milestones'
 -- );
-
