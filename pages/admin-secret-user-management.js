@@ -9,6 +9,7 @@ export default function AdminSecretUserManagement() {
   const [isLoading, setIsLoading] = useState(false)
   const [logs, setLogs] = useState([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
   const addLog = (message, type = 'info') => {
@@ -16,15 +17,17 @@ export default function AdminSecretUserManagement() {
     setLogs(prev => [...prev, { message, type, timestamp }])
   }
 
-  // 简单的密码验证
   const authenticateWithPassword = async () => {
-    if (password === 'AUSTIN2025') {
+    try {
+      const r = await fetch('/api/admin/session', {
+        method: 'POST', headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ action:'login', username, password })
+      })
+      if (!r.ok) { addLog('❌ 登录失败','error'); return }
       setIsAuthenticated(true)
-      addLog('✅ 密码正确，认证成功', 'success')
+      addLog('✅ 登录成功','success')
       await loadUsers()
-    } else {
-      addLog('❌ 密码错误', 'error')
-    }
+    } catch(e){ addLog('❌ 登录异常: '+e.message,'error') }
   }
 
   // 加载所有用户
@@ -35,10 +38,7 @@ export default function AdminSecretUserManagement() {
     try {
       const response = await fetch('/api/pwa/admin-user-management', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': 'AUSTIN2025'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ action: 'list_users' })
       })
@@ -65,10 +65,7 @@ export default function AdminSecretUserManagement() {
     try {
       const response = await fetch('/api/pwa/admin-user-management', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': 'AUSTIN2025'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ action: 'get_user_details', userId })
       })
@@ -103,10 +100,7 @@ export default function AdminSecretUserManagement() {
     try {
       const response = await fetch('/api/pwa/admin-user-management', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': 'AUSTIN2025'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ action: 'delete_user', userId })
       })
@@ -147,9 +141,16 @@ export default function AdminSecretUserManagement() {
         <div className="min-h-screen bg-gray-900 flex items-center justify-center">
           <div className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full">
             <h1 className="text-2xl font-bold text-red-400 mb-4">🔒 管理员访问</h1>
-            <p className="text-gray-300 mb-6">输入管理员密码</p>
+            <p className="text-gray-300 mb-6">服务器校验，不在页面保存口令</p>
             
             <div className="space-y-4">
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="管理员用户名"
+                className="w-full p-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
               <input
                 type="password"
                 value={password}

@@ -95,7 +95,7 @@ export default function AdminPanel() {
               <h1 className="text-xl font-bold text-gray-900">LEARNER CLUB 管理面板</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">👋 管理员 AUSTIN</span>
+              <span className="text-sm text-gray-600">👋 管理员</span>
               <button
                 onClick={() => window.open('/admin/papers/latest', '_blank')}
                 className="text-sm bg-green-100 hover:bg-green-200 px-3 py-1 rounded text-green-700"
@@ -1474,10 +1474,6 @@ function AdminLoginForm({ setIsLoggedIn }) {
 
           <div className="text-center text-xs text-gray-500 mt-4">
             <p>🔐 安全提示：请使用授权的管理员账户登录</p>
-            <div className="mt-2 text-blue-600">
-              <p>用户名: AUSTIN</p>
-              <p>密码: Abcd1234</p>
-            </div>
           </div>
         </form>
       </div>

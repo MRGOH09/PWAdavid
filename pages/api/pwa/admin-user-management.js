@@ -1,24 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
+import { hasValidAdminSession } from '../../../lib/admin-auth'
 
 // 使用Vercel-Supabase集成的原生环境变量
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY 
+    || process.env.SUPABASE_SERVICE_ROLE_KEY 
+    || process.env.SUPABASE_ANON_KEY 
+    || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
-
-// 简单的密码验证
-const ADMIN_PASSWORD = 'AUSTIN2025'
-
-// 验证管理员权限
-function verifyAdminAccess(req) {
-  const password = req.headers['x-admin-password']
-  if (password === ADMIN_PASSWORD) {
-    console.log('[admin-user-management] 管理员密码验证通过')
-    return { isValid: true }
-  }
-  console.log('[admin-user-management] 密码错误')
-  return false
-}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -35,10 +25,9 @@ export default async function handler(req, res) {
   })
 
   try {
-    // 验证管理员访问权限
-    const adminAuth = verifyAdminAccess(req)
-    if (!adminAuth || !adminAuth.isValid) {
-      return res.status(403).json({ ok: false, error: 'Access denied - Wrong password' })
+    // 验证管理员访问权限（HttpOnly 会话）
+    if (!hasValidAdminSession(req)) {
+      return res.status(403).json({ ok: false, error: 'Access denied' })
     }
 
     const { action, userId } = req.body
