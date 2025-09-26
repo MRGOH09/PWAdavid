@@ -1145,87 +1145,52 @@ async function batchAddRecords(userId, params, res) {
   try {
     console.log(`[batchAddRecords] 用户 ${userId} 批量添加记录:`, params.records?.length || 0, '条')
 
-    if (!params.records || !Array.isArray(params.records) || params.records.length === 0) {
-      return res.status(400).json({ 
-        error: 'No valid records provided' 
-      })
+    const records = params.records
+    if (!records || !Array.isArray(records) || records.length === 0) {
+      return res.status(400).json({ error: 'No valid records provided' })
     }
-
-    // 使用与单条记录相同的API路径逻辑 - 直接调用主系统
-    const baseURL = process.env.NODE_ENV === 'production' 
-      ? 'https://verceteleg.vercel.app' // 主系统域名，包含record-system API
-      : 'http://localhost:3000' // 开发环境需要主系统在3000端口运行
 
     const results = []
     const errors = []
 
-    // 逐个处理记录（确保数据一致性）
-    for (let i = 0; i < params.records.length; i++) {
-      const record = params.records[i]
-      
+    for (let i = 0; i < records.length; i++) {
+      const r = records[i]
+      if (!r.group || !r.category || !r.amount || !r.date) {
+        errors.push({ index: i, error: 'Missing fields' })
+        continue
+      }
       try {
-        const response = await fetch(`${baseURL}/api/records/record-system`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'User-Agent': 'PWA-Batch-Client'
-          },
-          body: JSON.stringify({
-            action: 'create',
-            userId: userId,
-            data: {
-              category_group: record.group,
-              category_code: record.category,
-              amount: parseFloat(record.amount),
-              note: record.note || '',
-              ymd: record.date
-            }
-          })
-        })
+        const { data: rec, error: recErr } = await supabase
+          .from('records')
+          .insert([{
+            user_id: userId,
+            category_group: r.group,
+            category_code: r.category,
+            amount: parseFloat(r.amount),
+            note: r.note || '',
+            ymd: r.date
+          }])
+          .select('id,category_group,category_code,amount,ymd')
+          .single()
 
-        if (response.ok) {
-          const result = await response.json()
-          results.push({ 
-            index: i, 
-            success: true, 
-            record: result.record 
-          })
-        } else {
-          const errorData = await response.text().catch(() => 'Unknown error')
-          errors.push({ 
-            index: i, 
-            error: `${response.status}: ${errorData}` 
-          })
+        if (recErr) {
+          errors.push({ index: i, error: recErr.message })
+          continue
         }
-      } catch (recordError) {
-        errors.push({ 
-          index: i, 
-          error: recordError.message 
-        })
+
+        results.push({ index: i, success: true, record: rec })
+      } catch (e) {
+        errors.push({ index: i, error: e.message })
       }
     }
 
     console.log(`[batchAddRecords] 完成: ${results.length} 成功, ${errors.length} 失败`)
 
-    // 如果有任何成功的记录，返回成功
-    if (results.length > 0) {
-      return res.json({
-        success: true,
-        message: `批量记录完成: ${results.length} 条成功${errors.length > 0 ? `, ${errors.length} 条失败` : ''}`,
-        results: {
-          successful: results.length,
-          failed: errors.length,
-          details: results,
-          errors: errors
-        }
-      })
-    } else {
-      // 全部失败
-      return res.status(400).json({
-        error: '批量记录失败',
-        details: errors
-      })
-    }
+    return res.status(results.length > 0 ? 200 : 400).json({
+      success: results.length > 0,
+      message: `批量记录完成: ${results.length} 条成功${errors.length > 0 ? `, ${errors.length} 条失败` : ''}`,
+      results: { successful: results.length, failed: errors.length, details: results, errors }
+    })
 
   } catch (error) {
     console.error('[batchAddRecords] 错误:', error)
