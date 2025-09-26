@@ -173,7 +173,21 @@ export default async function handler(req, res) {
     
     console.log(`[PWA Data] 用户信息: id=${dbUser.id}, name=${dbUser.name}, branch_code=${dbUser.branch_code}`)
     
-    const { action, ...params } = isPost ? req.body : { action: req.query.action || 'dashboard', ...req.query }
+    let { action, ...params } = isPost ? req.body : { action: req.query.action || 'dashboard', ...req.query }
+
+    // 兼容旧的预取/预加载动作名称
+    const originalAction = action
+    const actionMap = {
+      'getDashboard': 'dashboard',
+      'getProfile': 'profile',
+      'getRecentRecords': 'history'
+    }
+    action = actionMap[action] || action
+    // 对于 getRecentRecords 预取，提供默认分页
+    if (originalAction === 'getRecentRecords') {
+      if (!params.limit) params.limit = 10
+      if (!params.offset) params.offset = 0
+    }
     console.log(`[PWA Data] 收到body:`, req.body)
     console.log(`[PWA Data] 处理请求: action=${action}, user=${dbUser.id}`)
     
